@@ -69,7 +69,6 @@ mod delphi {
         }
 
         /// Register an account
-        /// The account can be an individual (property owner) account or an authority's account
         #[ink(message)]
         pub fn register_account(&mut self, name: Vec<u8>, timestamp: u64) {
             // get the contract caller
