@@ -40,10 +40,20 @@ mod delphi {
     /// The IPFS address (CID) of the document showing the reghtful ownership of the property
     type PropertyClaimAddr = Vec<u8>;
 
+    //// Event to announce the creation of an account
+    #[ink(event)]
+    pub struct AccountCreated {
+        #[ink(topic)]
+        account_id: AccountId,
+        #[ink(topic)]
+        is_authority: bool,
+        name: Vec<u8>,
+    }
+
     #[ink(storage)]
     pub struct Delphi {
         accounts: Mapping<AccountId, AccountInfo>,
-        registrations: Mapping<AccountId, PropertyId>,
+        registrations: Mapping<AccountId, Vec<PropertyId>>,
         properties: Mapping<PropertyId, PropertyRequirementAddr>,
         claims: Mapping<AccountId, PropertyClaimAddr>,
         assertions: Mapping<AccountId, IssueInfo>,
@@ -62,10 +72,38 @@ mod delphi {
             }
         }
 
-        /// Simply returns the current value of our `bool`.
+        /// Register an account
+        /// The account can be an individual (property owner) account or an authority's account
         #[ink(message)]
-        pub fn get(&self) -> bool {
-            self.value
+        pub fn register_account(&mut self, name: Vec<u8>, is_authority: bool, timestamp: u64) {
+            // get the contract caller
+            let caller = Self::env().caller();
+
+            let new_account = AccountInfo {
+                name: name.clone(),
+                is_authority,
+                timestamp,
+            };
+
+            // insert into storage
+            self.accounts.insert(&caller, &new_account);
+
+            // emit event
+            self.env().emit_event(AccountCreated {
+                account_id: caller,
+                is_authority,
+                name,
+            });
+        }
+
+        /// Check if an account exists and whether it is an authority figure
+        /// It returns a tuple (account_exists?, account_is_authority?)
+        #[ink(message)]
+        pub fn account_exists(&self, account_id: AccountId) -> (bool, bool) {
+            match self.accounts.get(&account_id) {
+                Some(info) => (true, if info.is_authority { true } else { false }),
+                None => (false, false),
+            }
         }
     }
 }
