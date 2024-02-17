@@ -127,9 +127,10 @@ mod delphi {
 
             // Record the registrar
             // This is important to load all the properties registered by a certain authority
-            if let Some(ref mut properties) = self.registrations.get(&caller) {
+            if let Some(ref mut property_types) = self.registrations.get(&caller) {
                 // add to the list of registered property types
-                properties.push(property_id.clone());
+                property_types.push(property_id.clone());
+                self.registrations.insert(caller, property_types);
             } else {
                 // insert new
                 let property_types = vec![property_id.clone()];
