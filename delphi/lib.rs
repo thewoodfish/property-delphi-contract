@@ -5,8 +5,8 @@
 #[ink::contract]
 mod delphi {
     use ink::storage::Mapping;
-    use scale_info::prelude::vec::Vec;
     use scale_info::prelude::vec;
+    use scale_info::prelude::vec::Vec;
 
     /// The struct containing more info about our user
     #[derive(scale::Decode, scale::Encode, Default)]
@@ -32,6 +32,18 @@ mod delphi {
         property: PropertyId,
         /// Time the assertion was created
         timestamp: u64,
+    }
+
+    /// The struct describing a property type
+    #[derive(scale::Decode, scale::Encode, Default, Clone)]
+    #[cfg_attr(
+        feature = "std",
+        derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
+    )]
+    pub struct PropertyType {
+        /// Id of property
+        id: PropertyId,
+        address: PropertyRequirementAddr,
     }
 
     /// The id of the property
@@ -61,8 +73,7 @@ mod delphi {
     #[ink(storage)]
     pub struct Delphi {
         accounts: Mapping<AccountId, AccountInfo>,
-        registrations: Mapping<AccountId, Vec<PropertyId>>,
-        properties: Mapping<PropertyId, PropertyRequirementAddr>,
+        registrations: Mapping<AccountId, Vec<PropertyType>>,
         claims: Mapping<AccountId, PropertyClaimAddr>,
         assertions: Mapping<AccountId, IssueInfo>,
     }
@@ -74,7 +85,6 @@ mod delphi {
             Delphi {
                 accounts: Default::default(),
                 registrations: Default::default(),
-                properties: Default::default(),
                 claims: Default::default(),
                 assertions: Default::default(),
             }
@@ -125,20 +135,23 @@ mod delphi {
             // Get the contract caller
             let caller = Self::env().caller();
 
+            // create type
+            let property_type = PropertyType {
+                id: property_id.clone(),
+                address: ptype_ipfs_addr.clone(),
+            };
+
             // Record the registrar
             // This is important to load all the properties registered by a certain authority
             if let Some(ref mut property_types) = self.registrations.get(&caller) {
                 // add to the list of registered property types
-                property_types.push(property_id.clone());
+                property_types.push(property_type.clone());
                 self.registrations.insert(caller, property_types);
             } else {
                 // insert new
-                let property_types = vec![property_id.clone()];
+                let property_types = vec![property_type.clone()];
                 self.registrations.insert(caller, &property_types);
             }
-
-            // Now we will record the property itself and the IPFS address containing its details
-            self.properties.insert(&property_id, &ptype_ipfs_addr);
 
             // Emit event
             self.env().emit_event(PropertyTypeRegistered {
@@ -148,17 +161,23 @@ mod delphi {
             });
         }
 
-        /// Return the IPFS addresses of the property type documents created by a certain authority
-        /// They are returned as concatenated bytes separated by the '#' character
+        /// Return the info about property type documents created by a certain authority
+        /// They are returned as concatenated bytes separated by the '###' character
+        /// The property id and address are separated by a '~' character
+        /// E.g prop_id1~prop_addr1###prop_id2~prop_addr2
         #[ink(message, payable)]
         pub fn ptype_documents(&self, account_id: AccountId) -> Vec<u8> {
             if let Some(property_types) = self.registrations.get(&account_id) {
                 property_types
                     .clone()
                     .iter_mut()
-                    .flat_map(|vector| {
-                        vector.push(b'#'); // add separator
-                        vector.clone().into_iter()
+                    .flat_map(|ptype| {
+                        // make the `id` the collator
+                        ptype.id.push(b'~');
+                        ptype.id.extend(ptype.address.iter());
+
+                        ptype.id.extend("###".as_bytes()); // add separator
+                        ptype.id.clone().into_iter()
                     })
                     .collect()
             } else {
