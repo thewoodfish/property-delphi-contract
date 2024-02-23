@@ -29,7 +29,7 @@ mod delphi {
     )]
     pub struct IssueInfo {
         /// Id of property
-        property: PropertyId,
+        property: PropertyTypeId,
         /// Time the assertion was created
         timestamp: u64,
     }
@@ -41,13 +41,27 @@ mod delphi {
         derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
     )]
     pub struct PropertyType {
+        /// Id of property type
+        id: PropertyTypeId,
+        address: PropertyRequirementAddr,
+    }
+
+    /// The struct representing a property claim, yet to be verified and attested
+    #[derive(scale::Decode, scale::Encode, Default, Clone)]
+    #[cfg_attr(
+        feature = "std",
+        derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
+    )]
+    pub struct PropertyClaim {
         /// Id of property
         id: PropertyId,
-        address: PropertyRequirementAddr,
+        address: PropertyClaimAddr,
     }
 
     /// The id of the property
     type PropertyId = Vec<u8>;
+    /// The id of the property document type
+    type PropertyTypeId = Vec<u8>;
     /// The IPFS address (CID) of the requirements of the property
     type PropertyRequirementAddr = Vec<u8>;
     /// The IPFS address (CID) of the document showing the reghtful ownership of the property
@@ -66,15 +80,25 @@ mod delphi {
     pub struct PropertyTypeRegistered {
         #[ink(topic)]
         account_id: AccountId,
-        property_id: PropertyId,
+        property_type_id: PropertyTypeId,
         ptype_ipfs_addr: PropertyRequirementAddr,
+    }
+
+    //// Event to announce the registration of a claim to a property
+    #[ink(event)]
+    pub struct PropertyClaimRegistered {
+        #[ink(topic)]
+        claimer: AccountId,
+        #[ink(topic)]
+        property_type_id: PropertyTypeId,
+        property_id: PropertyId,
     }
 
     #[ink(storage)]
     pub struct Delphi {
         accounts: Mapping<AccountId, AccountInfo>,
         registrations: Mapping<AccountId, Vec<PropertyType>>,
-        claims: Mapping<AccountId, PropertyClaimAddr>,
+        claims: Mapping<PropertyTypeId, (AccountId, PropertyClaim)>,
         assertions: Mapping<AccountId, IssueInfo>,
     }
 
@@ -111,7 +135,7 @@ mod delphi {
             });
         }
 
-        /// Check if an account exists
+        /// Check if an account exists.
         /// It also returns the name of the user if it exists
         #[ink(message, payable)]
         pub fn account_exists(&self) -> (bool, Vec<u8>) {
@@ -124,12 +148,12 @@ mod delphi {
             }
         }
 
-        /// Register a property type
+        /// Register a property type.
         /// This should only be called by an authority figure (e.g Ministry of Lands)
         #[ink(message, payable)]
         pub fn register_ptype(
             &mut self,
-            property_id: PropertyId,
+            property_type_id: PropertyTypeId,
             ptype_ipfs_addr: PropertyRequirementAddr,
         ) {
             // Get the contract caller
@@ -137,11 +161,11 @@ mod delphi {
 
             // create type
             let property_type = PropertyType {
-                id: property_id.clone(),
+                id: property_type_id.clone(),
                 address: ptype_ipfs_addr.clone(),
             };
 
-            // Record the registrar
+            // Record the registrar.
             // This is important to load all the properties registered by a certain authority
             if let Some(ref mut property_types) = self.registrations.get(&caller) {
                 // add to the list of registered property types
@@ -156,13 +180,13 @@ mod delphi {
             // Emit event
             self.env().emit_event(PropertyTypeRegistered {
                 account_id: caller,
-                property_id,
+                property_type_id,
                 ptype_ipfs_addr,
             });
         }
 
-        /// Return the info about property type documents created by a certain authority
-        /// They are returned as concatenated bytes separated by the '###' character
+        /// Return the info about property type documents created by a certain authority.
+        /// They are returned as concatenated bytes separated by the '###' character.
         /// The property id and address are separated by a '~' character
         /// E.g prop_id1~prop_addr1###prop_id2~prop_addr2
         #[ink(message, payable)]
@@ -183,6 +207,36 @@ mod delphi {
             } else {
                 Vec::new()
             }
+        }
+
+        /// Submit a claim to a particular property.
+        /// This is the first step, preceeding verification and attestation
+        #[ink(message, payable)]
+        pub fn register_claim(
+            &mut self,
+            property_type_id: PropertyTypeId,
+            property_id: PropertyId,
+            claim_ipfs_addr: PropertyClaimAddr,
+        ) {
+            // get claimer
+            let claimer = Self::env().caller();
+
+            // create a new claim
+            let property_claim = PropertyClaim {
+                id: property_id.clone(),
+                address: claim_ipfs_addr,
+            };
+
+            // insert into contract storage
+            self.claims
+                .insert(&property_type_id, &(claimer.clone(), property_claim));
+
+            // Emit event
+            self.env().emit_event(PropertyClaimRegistered {
+                claimer,
+                property_type_id,
+                property_id,
+            });
         }
     }
 }
