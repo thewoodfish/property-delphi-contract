@@ -33,6 +33,10 @@ mod delphi {
         claimer: AccountId,
         /// IPFS location of property claim
         property_claim_addr: PropertyClaimAddr,
+        /// Type the property belongs to.
+        property_type_id: PropertyTypeId,
+        /// List of previous owners and time of transfer
+        transfer_history: Vec<(AccountId, PropertyTransferTimestamp)>,
     }
 
     /// The struct containing info about the assertions of the land made by an authority
@@ -80,6 +84,8 @@ mod delphi {
     type PropertyRequirementAddr = Vec<u8>;
     /// The IPFS address (CID) of the document showing the reghtful ownership of the property
     type PropertyClaimAddr = Vec<u8>;
+    /// The Unix timestamp recording the time a property transfer was made
+    type PropertyTransferTimestamp = u64;
 
     //// Event to announce the creation of an account
     #[ink(event)]
@@ -105,6 +111,17 @@ mod delphi {
         claimer: AccountId,
         #[ink(topic)]
         property_type_id: PropertyTypeId,
+        property_id: PropertyId,
+    }
+
+    //// Event to announce the successful transfer of a property
+    #[ink(event)]
+    pub struct PropertyTransferred {
+        #[ink(topic)]
+        sender: AccountId,
+        #[ink(topic)]
+        recipient: AccountId,
+        #[ink(topic)]
         property_id: PropertyId,
     }
 
@@ -241,6 +258,8 @@ mod delphi {
             let property = Property {
                 claimer: claimer.clone(),
                 property_claim_addr: claim_ipfs_addr,
+                property_type_id: property_type_id.clone(),
+                transfer_history: Vec::new(),
             };
 
             // register property under type of claim
@@ -299,6 +318,98 @@ mod delphi {
                 (property.claimer, property.property_claim_addr.clone())
             } else {
                 (claimer, Default::default())
+            }
+        }
+
+        /// Transfer a property (or parts of it) from one user to the other
+        /// If a part of the property is transferred, the new properties automatically becomes unattested and have to be signed afresh
+        #[ink(message, payable)]
+        pub fn transfer_property(
+            &mut self,
+            property_id: PropertyId,
+            recipient: AccountId,
+            senders_claim_ipfs_addr: PropertyClaimAddr,
+            senders_property_id: PropertyId,
+            recipients_claim_ipfs_addr: PropertyClaimAddr,
+            recipients_property_id: PropertyId,
+            time_of_transfer: PropertyTransferTimestamp,
+        ) {
+            // get caller (which is the account making the transfer)
+            let caller = Self::env().caller();
+
+            // get the property
+            if let Some(mut property) = self.properties.get(&property_id) {
+                // check if the property is being transferred as a whole
+                if senders_claim_ipfs_addr.len() != 0 {
+                    // it wasn't
+                    // delete the claims IPFS address because it is invalid now
+                    self.claims.remove(&property.property_type_id);
+
+                    // now delete the (old whole) property record
+                    self.properties.remove(&property_id);
+
+                    // register new property under type of claim
+                    if let Some(mut property_ids) = self.claims.get(&property.property_type_id) {
+                        // append to the list if it doesn't contain it already
+                        if !property_ids.contains(&senders_property_id) {
+                            property_ids.push(senders_property_id.clone());
+                        }
+
+                        if !property_ids.contains(&recipients_property_id) {
+                            property_ids.push(recipients_property_id.clone());
+                        }
+
+                        // insert the two new property IDs into storage
+                        self.claims
+                            .insert(property.property_type_id.clone(), &property_ids);
+                    } else {
+                        // create new class of properties and add the new one to it
+                        let property_ids =
+                            vec![senders_property_id.clone(), recipients_property_id.clone()];
+
+                        // insert into contract storage
+                        self.claims
+                            .insert(property.property_type_id.clone(), &property_ids);
+                    }
+
+                    // create a new property document for the sender
+                    let senders_property = Property {
+                        claimer: caller.clone(),
+                        property_claim_addr: senders_claim_ipfs_addr,
+                        property_type_id: property.property_type_id.clone(),
+                        transfer_history: vec![(caller.clone(), time_of_transfer)],
+                    };
+
+                    // create a new property document for the recipients
+                    let recipients_property = Property {
+                        claimer: recipient.clone(),
+                        property_claim_addr: recipients_claim_ipfs_addr,
+                        property_type_id: property.property_type_id.clone(),
+                        transfer_history: vec![(caller.clone(), time_of_transfer)],
+                    };
+
+                    // register the both (unattested) property claims onchain
+                    self.properties
+                        .insert(property_id.clone(), &senders_property);
+                    self.properties
+                        .insert(property_id.clone(), &recipients_property);
+                } else {
+                    // The property was tranferred as a whole
+                    // Here we need not do nuch, just change the property claimer
+                    // Then we add the time of transfer and the id of the previous owner
+                    property.claimer = recipient;
+                    property.transfer_history.push((caller, time_of_transfer));
+
+                    // save to contract storage
+                    self.properties.insert(property_id.clone(), &property);
+                }
+
+                // emit event
+                self.env().emit_event(PropertyTransferred {
+                    sender: caller,
+                    recipient,
+                    property_id,
+                });
             }
         }
     }
