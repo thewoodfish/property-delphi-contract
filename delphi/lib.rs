@@ -21,6 +21,20 @@ mod delphi {
         timestamp: u64,
     }
 
+    /// The struct containing more info about a property
+    /// The property might be claimed, attested or neither
+    #[derive(scale::Decode, scale::Encode)]
+    #[cfg_attr(
+        feature = "std",
+        derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
+    )]
+    pub struct Property {
+        /// Id of claimer
+        claimer: AccountId,
+        /// IPFS location of property claim
+        property_claim_addr: PropertyClaimAddr,
+    }
+
     /// The struct containing info about the assertions of the land made by an authority
     #[derive(scale::Decode, scale::Encode, Default)]
     #[cfg_attr(
@@ -98,7 +112,8 @@ mod delphi {
     pub struct Delphi {
         accounts: Mapping<AccountId, AccountInfo>,
         registrations: Mapping<AccountId, Vec<PropertyType>>,
-        claims: Mapping<PropertyTypeId, (AccountId, PropertyClaim)>,
+        claims: Mapping<PropertyTypeId, Vec<PropertyId>>,
+        properties: Mapping<PropertyId, Property>,
         assertions: Mapping<AccountId, IssueInfo>,
     }
 
@@ -110,6 +125,7 @@ mod delphi {
                 accounts: Default::default(),
                 registrations: Default::default(),
                 claims: Default::default(),
+                properties: Default::default(),
                 assertions: Default::default(),
             }
         }
@@ -221,15 +237,30 @@ mod delphi {
             // get claimer
             let claimer = Self::env().caller();
 
-            // create a new claim
-            let property_claim = PropertyClaim {
-                id: property_id.clone(),
-                address: claim_ipfs_addr,
+            // create a new property document
+            let property = Property {
+                claimer: claimer.clone(),
+                property_claim_addr: claim_ipfs_addr,
             };
 
-            // insert into contract storage
-            self.claims
-                .insert(&property_type_id, &(claimer.clone(), property_claim));
+            // register property under type of claim
+            if let Some(mut property_ids) = self.claims.get(&property_type_id) {
+                // append to the list if it doesn't contain it already
+                if !property_ids.contains(&property_id) {
+                    property_ids.push(property_id.clone());
+                }
+
+                self.claims.insert(property_type_id.clone(), &property_ids);
+            } else {
+                // create new class of properties and add the new one to it
+                let property_ids = vec![property_id.clone()];
+
+                // insert into contract storage
+                self.claims.insert(property_type_id.clone(), &property_ids);
+            }
+
+            // register (unattested) property claim onchain
+            self.properties.insert(property_id.clone(), &property);
 
             // Emit event
             self.env().emit_event(PropertyClaimRegistered {
@@ -237,6 +268,38 @@ mod delphi {
                 property_type_id,
                 property_id,
             });
+        }
+
+        /// Returns a list of property (claims) IDs registered according to a particular property type
+        /// The property IDs are separated by the '#' character
+        #[ink(message, payable)]
+        pub fn property_claims(&self, property_type_id: PropertyTypeId) -> Vec<u8> {
+            if let Some(property_ids) = self.claims.get(&property_type_id) {
+                property_ids
+                    .into_iter()
+                    .fold(Vec::new(), |mut ids, inner_vec| {
+                        ids.extend(inner_vec);
+                        ids.push(b'#');
+                        ids
+                    })
+            } else {
+                Default::default()
+            }
+        }
+
+        /// Return the details of a property
+        /// The claimer is returned as the first element of the tuple
+        /// The default value of the claimer is the caller. In this scenerio, the length of the vector will be the flag on the client side
+        #[ink(message, payable)]
+        pub fn property_detail(&self, property_id: PropertyId) -> (AccountId, Vec<u8>) {
+            // get claimer
+            let claimer = Self::env().caller();
+
+            if let Some(property) = self.properties.get(&property_id) {
+                (property.claimer, property.property_claim_addr.clone())
+            } else {
+                (claimer, Default::default())
+            }
         }
     }
 }
