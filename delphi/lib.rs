@@ -82,7 +82,7 @@ mod delphi {
     type PropertyTypeId = Vec<u8>;
     /// The IPFS address (CID) of the requirements of the property
     type PropertyRequirementAddr = Vec<u8>;
-    /// The IPFS address (CID) of the document showing the reghtful ownership of the property
+    /// The IPFS address (CID) of the document showing the rightful ownership of the property
     type PropertyClaimAddr = Vec<u8>;
     /// The Unix timestamp recording the time a property transfer was made
     type PropertyTransferTimestamp = u64;
@@ -114,7 +114,7 @@ mod delphi {
         property_id: PropertyId,
     }
 
-    //// Event to announce the successful transfer of a property
+    /// Event to announce the successful transfer of a property
     #[ink(event)]
     pub struct PropertyTransferred {
         #[ink(topic)]
@@ -340,10 +340,19 @@ mod delphi {
             // get the property
             if let Some(mut property) = self.properties.get(&property_id) {
                 // check if the property is being transferred as a whole
-                if senders_claim_ipfs_addr.len() != 0 {
+                if recipients_claim_ipfs_addr.len() != 0 {
                     // it wasn't
                     // delete the claims IPFS address because it is invalid now
-                    self.claims.remove(&property.property_type_id);
+                    if let Some(ids) = self.claims.get(&property.property_type_id) {
+                        let filtered_ids = ids
+                            .iter()
+                            .filter(|&id| id != &property_id)
+                            .cloned()
+                            .collect::<Vec<PropertyId>>();
+                        
+                        self.claims
+                            .insert(&property.property_type_id, &filtered_ids);
+                    }
 
                     // now delete the (old whole) property record
                     self.properties.remove(&property_id);
@@ -390,14 +399,15 @@ mod delphi {
 
                     // register the both (unattested) property claims onchain
                     self.properties
-                        .insert(property_id.clone(), &senders_property);
+                        .insert(senders_property_id.clone(), &senders_property);
                     self.properties
-                        .insert(property_id.clone(), &recipients_property);
+                        .insert(recipients_property_id.clone(), &recipients_property);
                 } else {
                     // The property was tranferred as a whole
-                    // Here we need not do nuch, just change the property claimer
+                    // Here we need not do much, just change the property claimer
                     // Then we add the time of transfer and the id of the previous owner
                     property.claimer = recipient;
+                    property.property_claim_addr = senders_claim_ipfs_addr;
                     property.transfer_history.push((caller, time_of_transfer));
 
                     // save to contract storage
