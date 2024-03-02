@@ -37,6 +37,8 @@ mod delphi {
         property_type_id: PropertyTypeId,
         /// List of previous owners and time of transfer
         transfer_history: Vec<(AccountId, PropertyTransferTimestamp)>,
+        /// The time and the account that made the assertion
+        assertion: (AssertionTimestamp, AccountId),
     }
 
     /// The struct containing info about the assertions of the land made by an authority
@@ -76,6 +78,21 @@ mod delphi {
         address: PropertyClaimAddr,
     }
 
+    /// Delphi's error type.
+    #[derive(scale::Decode, scale::Encode, Clone)]
+    #[cfg_attr(
+        feature = "std",
+        derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
+    )]
+    pub enum Error {
+        /// Returned when a property owner tries to transfer to himself
+        CannotTransferToSelf,
+        /// Returned when an unauthorized account tries to sign a property document (attestation)
+        UnauthorizedAccount,
+    }
+
+    /// Delphi's result type.
+    pub type Result<T> = core::result::Result<T, Error>;
     /// The id of the property
     type PropertyId = Vec<u8>;
     /// The id of the property document type
@@ -86,6 +103,8 @@ mod delphi {
     type PropertyClaimAddr = Vec<u8>;
     /// The Unix timestamp recording the time a property transfer was made
     type PropertyTransferTimestamp = u64;
+    /// The time the assertion was made by the right authority after verifying that the property belongs to the account
+    type AssertionTimestamp = u64;
 
     //// Event to announce the creation of an account
     #[ink(event)]
@@ -125,6 +144,15 @@ mod delphi {
         property_id: PropertyId,
     }
 
+    /// Event to announce the successful attestation of a property
+    #[ink(event)]
+    pub struct PropertyDocumentSigned {
+        #[ink(topic)]
+        attester: AccountId,
+        #[ink(topic)]
+        property_id: PropertyId,
+    }
+
     #[ink(storage)]
     pub struct Delphi {
         accounts: Mapping<AccountId, AccountInfo>,
@@ -149,7 +177,7 @@ mod delphi {
 
         /// Register an account
         #[ink(message, payable)]
-        pub fn register_account(&mut self, name: Vec<u8>, timestamp: u64) {
+        pub fn register_account(&mut self, name: Vec<u8>, timestamp: u64) -> Result<()> {
             // Get the contract caller
             let caller = Self::env().caller();
 
@@ -166,6 +194,8 @@ mod delphi {
                 account_id: caller,
                 name,
             });
+
+            Ok(())
         }
 
         /// Check if an account exists.
@@ -188,7 +218,7 @@ mod delphi {
             &mut self,
             property_type_id: PropertyTypeId,
             ptype_ipfs_addr: PropertyRequirementAddr,
-        ) {
+        ) -> Result<()> {
             // Get the contract caller
             let caller = Self::env().caller();
 
@@ -216,6 +246,8 @@ mod delphi {
                 property_type_id,
                 ptype_ipfs_addr,
             });
+
+            Ok(())
         }
 
         /// Return the info about property type documents created by a certain authority.
@@ -250,7 +282,7 @@ mod delphi {
             property_type_id: PropertyTypeId,
             property_id: PropertyId,
             claim_ipfs_addr: PropertyClaimAddr,
-        ) {
+        ) -> Result<()> {
             // get claimer
             let claimer = Self::env().caller();
 
@@ -260,6 +292,9 @@ mod delphi {
                 property_claim_addr: claim_ipfs_addr,
                 property_type_id: property_type_id.clone(),
                 transfer_history: Vec::new(),
+                // the claimer's address is the default value for the id of the asserting authority
+                // this is not a bug as the assertion flag will be the timestamp of the signing of the document
+                assertion: (0, claimer.clone()),
             };
 
             // register property under type of claim
@@ -287,6 +322,8 @@ mod delphi {
                 property_type_id,
                 property_id,
             });
+
+            Ok(())
         }
 
         /// Returns a list of property (claims) IDs registered according to a particular property type
@@ -333,9 +370,14 @@ mod delphi {
             recipients_claim_ipfs_addr: PropertyClaimAddr,
             recipients_property_id: PropertyId,
             time_of_transfer: PropertyTransferTimestamp,
-        ) {
+        ) -> Result<()> {
             // get caller (which is the account making the transfer)
             let caller = Self::env().caller();
+
+            // check to prevent transfer to self
+            if recipient == caller {
+                return Err(Error::UnauthorizedAccount);
+            }
 
             // get the property
             if let Some(mut property) = self.properties.get(&property_id) {
@@ -349,7 +391,7 @@ mod delphi {
                             .filter(|&id| id != &property_id)
                             .cloned()
                             .collect::<Vec<PropertyId>>();
-                        
+
                         self.claims
                             .insert(&property.property_type_id, &filtered_ids);
                     }
@@ -387,6 +429,7 @@ mod delphi {
                         property_claim_addr: senders_claim_ipfs_addr,
                         property_type_id: property.property_type_id.clone(),
                         transfer_history: vec![(caller.clone(), time_of_transfer)],
+                        assertion: (0, caller.clone()),
                     };
 
                     // create a new property document for the recipients
@@ -395,6 +438,7 @@ mod delphi {
                         property_claim_addr: recipients_claim_ipfs_addr,
                         property_type_id: property.property_type_id.clone(),
                         transfer_history: vec![(caller.clone(), time_of_transfer)],
+                        assertion: (0, recipient.clone()),
                     };
 
                     // register the both (unattested) property claims onchain
@@ -421,6 +465,49 @@ mod delphi {
                     property_id,
                 });
             }
+
+            Ok(())
+        }
+
+        /// Sign a property document and cement the owner as the undisputed rightful owner of the property.
+        /// It returns an error if the attested is unauthorized to attest ownership.
+        /// Authorization is gotten by checking for equality between the account that created the property type and the attesting account
+        #[ink(message, payable)]
+        pub fn sign_document(
+            &mut self,
+            property_id: PropertyId,
+            property_type_id: PropertyTypeId,
+            assertion_timestamp: AssertionTimestamp,
+        ) -> Result<()> {
+            // get caller (which is the account making the attestation)
+            let caller = Self::env().caller();
+
+            // check that only the authorized account can sign.
+            if let Some(property_types) = self.registrations.get(&caller) {
+                if !property_types
+                    .iter()
+                    .any(|ptype| ptype.id == property_type_id)
+                {
+                    // error! unauthorized
+                    return Err(Error::UnauthorizedAccount);
+                }
+            }
+
+            // now sign document
+            if let Some(mut property) = self.properties.get(&property_id) {
+                property.assertion = (assertion_timestamp, caller.clone());
+
+                // update property
+                self.properties.insert(&property_id, &property);
+
+                // emit event
+                self.env().emit_event(PropertyDocumentSigned {
+                    attester: caller,
+                    property_id,
+                });
+            }
+
+            Ok(())
         }
     }
 }
