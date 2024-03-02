@@ -346,13 +346,18 @@ mod delphi {
         /// Return the details of a property
         /// The claimer is returned as the first element of the tuple
         /// The default value of the claimer is the caller. In this scenerio, the length of the vector will be the flag on the client side
+        /// The vector is the claim's IPFS address + the property type ID
         #[ink(message, payable)]
         pub fn property_detail(&self, property_id: PropertyId) -> (AccountId, Vec<u8>) {
             // get claimer
             let claimer = Self::env().caller();
 
             if let Some(property) = self.properties.get(&property_id) {
-                (property.claimer, property.property_claim_addr.clone())
+                let mut return_vec = property.property_claim_addr.clone();
+                return_vec.push(b'$');
+                return_vec.extend(property.property_type_id.clone());
+
+                (property.claimer, return_vec)
             } else {
                 (claimer, Default::default())
             }
@@ -376,7 +381,7 @@ mod delphi {
 
             // check to prevent transfer to self
             if recipient == caller {
-                return Err(Error::UnauthorizedAccount);
+                return Err(Error::CannotTransferToSelf);
             }
 
             // get the property
