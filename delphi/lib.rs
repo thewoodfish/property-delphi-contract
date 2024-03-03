@@ -346,7 +346,7 @@ mod delphi {
         /// Return the details of a property
         /// The claimer is returned as the first element of the tuple
         /// The default value of the claimer is the caller. In this scenerio, the length of the vector will be the flag on the client side
-        /// The vector is the claim's IPFS address + the property type ID
+        /// The vector is the claim's IPFS address + the property type ID separated by a '$' character
         #[ink(message, payable)]
         pub fn property_detail(&self, property_id: PropertyId) -> (AccountId, Vec<u8>) {
             // get claimer
@@ -513,6 +513,24 @@ mod delphi {
             }
 
             Ok(())
+        }
+
+        /// Return the verification status of a property
+        #[ink(message, payable)]
+        pub fn attestation_status(
+            &self,
+            property_id: PropertyId,
+        ) -> (AssertionTimestamp, AccountId) {
+            // get caller
+            let caller = Self::env().caller();
+
+            if let Some(property) = self.properties.get(&property_id) {
+                (property.assertion.0, property.claimer)
+            } else {
+                // 0 is the flag to indicate that the property has not been attested
+                // the caller is also returned as AccountId does not inplement Default
+                (0, caller)
+            }
         }
     }
 }
