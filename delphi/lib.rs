@@ -105,6 +105,8 @@ mod delphi {
     type PropertyTransferTimestamp = u64;
     /// The time the assertion was made by the right authority after verifying that the property belongs to the account
     type AssertionTimestamp = u64;
+    /// The (JS) parsable AccountId in vector form
+    type AccountIdVec = Vec<u8>;
 
     //// Event to announce the creation of an account
     #[ink(event)]
@@ -159,7 +161,9 @@ mod delphi {
         registrations: Mapping<AccountId, Vec<PropertyType>>,
         claims: Mapping<PropertyTypeId, Vec<PropertyId>>,
         properties: Mapping<PropertyId, Property>,
-        assertions: Mapping<AccountId, IssueInfo>,
+        /// This Mapping field is simply unnecessary. But due to the fact that we've found it difficult to
+        /// decode an AccountId with Javascript, we will be returning a vec instead of an accountId
+        account_ids: Mapping<AccountId, AccountIdVec>,
     }
 
     impl Delphi {
@@ -171,13 +175,18 @@ mod delphi {
                 registrations: Default::default(),
                 claims: Default::default(),
                 properties: Default::default(),
-                assertions: Default::default(),
+                account_ids: Default::default(),
             }
         }
 
         /// Register an account
         #[ink(message, payable)]
-        pub fn register_account(&mut self, name: Vec<u8>, timestamp: u64) -> Result<()> {
+        pub fn register_account(
+            &mut self,
+            account_id: AccountIdVec,
+            name: Vec<u8>,
+            timestamp: u64,
+        ) -> Result<()> {
             // Get the contract caller
             let caller = Self::env().caller();
 
@@ -188,6 +197,9 @@ mod delphi {
 
             // Insert into storage
             self.accounts.insert(&caller, &new_account);
+
+            // Save the mapping of AccountId(real) -> AccountId(Vec)
+            self.account_ids.insert(caller.clone(), &account_id);
 
             // Emit event
             self.env().emit_event(AccountCreated {
@@ -345,10 +357,10 @@ mod delphi {
 
         /// Return the details of a property
         /// The claimer is returned as the first element of the tuple
-        /// The default value of the claimer is the caller. In this scenerio, the length of the vector will be the flag on the client side
+        /// The default value of the claimer is the caller.
         /// The vector is the claim's IPFS address + the property type ID separated by a '$' character
         #[ink(message, payable)]
-        pub fn property_detail(&self, property_id: PropertyId) -> (AccountId, Vec<u8>) {
+        pub fn property_detail(&self, property_id: PropertyId) -> (AccountIdVec, Vec<u8>) {
             // get claimer
             let claimer = Self::env().caller();
 
@@ -357,10 +369,13 @@ mod delphi {
                 return_vec.push(b'$');
                 return_vec.extend(property.property_type_id.clone());
 
-                (property.claimer, return_vec)
-            } else {
-                (claimer, Default::default())
+                // get parsable account ID mapping to the claimers ID
+                if let Some(account_id) = self.account_ids.get(&claimer) {
+                    return (account_id, return_vec);
+                }
             }
+
+            (Default::default(), Default::default())
         }
 
         /// Transfer a property (or parts of it) from one user to the other
@@ -515,21 +530,48 @@ mod delphi {
             Ok(())
         }
 
-        /// Return the verification status of a property
+        /// Return the verification status of a property.
+        /// This verification status includes: 1. AssertionTimestamp 2. AccountIds showing transfer History
+        /// The accountId's showing transfer history are separated with a '$' character.
         #[ink(message, payable)]
-        pub fn attestation_status(
-            &self,
-            property_id: PropertyId,
-        ) -> (AssertionTimestamp, AccountId) {
-            // get caller
-            let caller = Self::env().caller();
+        pub fn attestation_status(&self, property_id: PropertyId) -> (AssertionTimestamp, Vec<u8>) {
+            // the vector we are returning, containing all the accountIds that have has possession ofc the property
+            let mut transfer_history = Vec::new();
 
             if let Some(property) = self.properties.get(&property_id) {
-                (property.assertion.0, property.claimer)
+                // we need to return AccountIdVec, hence we need to make the conversion
+                let _ = property
+                    .transfer_history
+                    .iter()
+                    .for_each(|(account_id, _)| {
+                        transfer_history.push(self.convert_accountid_to_vec(&account_id));
+                    });
+
+                // return our all important data
+                (
+                    property.assertion.0,
+                    transfer_history
+                        .into_iter()
+                        .fold(Vec::new(), |mut ids, inner_vec| {
+                            ids.extend(inner_vec);
+                            ids.push(b'$');
+                            ids
+                        }),
+                )
             } else {
                 // 0 is the flag to indicate that the property has not been attested
-                // the caller is also returned as AccountId does not inplement Default
-                (0, caller)
+                // the caller is also returned as AccountId does not implement Default
+                (0, Default::default())
+            }
+        }
+
+        /// Helper function to convert an AccountId into an AccountIdvec.
+        /// It uses the account_ids mapping property of our contract storage
+        pub fn convert_accountid_to_vec(&self, account_id: &AccountId) -> AccountIdVec {
+            if let Some(account_id_vec) = self.account_ids.get(account_id) {
+                account_id_vec
+            } else {
+                Default::default()
             }
         }
     }
