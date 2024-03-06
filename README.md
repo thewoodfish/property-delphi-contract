@@ -190,7 +190,7 @@ Functions are perhaps the core of a contract. They help interact with onchain st
 
 - **`new`**:
     ```rust 
-        pub fn new() -> Self { }
+    pub fn new() -> Self { }
     ```
     - Make state changes: Yes, initializes contract storage.
     - Arguments: None.
