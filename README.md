@@ -27,38 +27,40 @@ We will now examine the various constructs that make our solution work, ranging 
   This represents the account information of an entity participating on the network. It contains the name (or pseudo-name) of the user and the time the account was created.
 
 - `Property`:
-    ```rust
-    pub struct Property {
-        /// Id of claimer
-        claimer: AccountId,
-        /// IPFS location of property claim
-        property_claim_addr: PropertyClaimAddr,
-        /// Type the property belongs to.
-        property_type_id: PropertyTypeId,
-        /// List of previous owners and time of transfer
-        transfer_history: Vec<(AccountId, PropertyTransferTimestamp)>,
-        /// The time and the account that made the assertion
-        assertion: (AssertionTimestamp, AccountId),
-    }
-    ```
 
-    This represents the neccesary information associated with a property. It describes a piece of property, contains the history of the property transfer and acquisition and the all-importqant attestation status of the property.
+  ```rust
+  pub struct Property {
+      /// Id of claimer
+      claimer: AccountId,
+      /// IPFS location of property claim
+      property_claim_addr: PropertyClaimAddr,
+      /// Type the property belongs to.
+      property_type_id: PropertyTypeId,
+      /// List of previous owners and time of transfer
+      transfer_history: Vec<(AccountId, PropertyTransferTimestamp)>,
+      /// The time and the account that made the assertion
+      assertion: (AssertionTimestamp, AccountId),
+  }
+  ```
+
+  This represents the neccesary information associated with a property. It describes a piece of property, contains the history of the property transfer and acquisition and the all-importqant attestation status of the property.
 
 - `PropertyType`:
-    ```rust
-        pub struct PropertyType {
-        /// Id of property type
-        id: PropertyTypeId,
-        address: PropertyRequirementAddr,
-    }
-    ```
 
-    This represents the type of a property. There are many separate information that are inportant to various districts and states that it is important that property documents remain flexible and the authority of the area specify the exact information that in needed on a property document, to prove its validity. Hence, a property type.
+  ```rust
+      pub struct PropertyType {
+      /// Id of property type
+      id: PropertyTypeId,
+      address: PropertyRequirementAddr,
+  }
+  ```
 
+  This represents the type of a property. There are many separate information that are inportant to various districts and states that it is important that property documents remain flexible and the authority of the area specify the exact information that in needed on a property document, to prove its validity. Hence, a property type.
 
 ### The Error Types
 
 Errors help us handle strange behaviour in our contract and we have defined just two of them:
+
 ```rust
     pub enum Error {
         /// Returned when a property owner tries to transfer to himself
@@ -71,6 +73,7 @@ Errors help us handle strange behaviour in our contract and we have defined just
 ### Type Aliases
 
 Type aliases helps us have neater and more readable code. Here are the error types defined below:
+
 ```rust
     /// Delphi's result type.
     pub type Result<T> = core::result::Result<T, Error>;
@@ -100,6 +103,7 @@ Type aliases helps us have neater and more readable code. Here are the error typ
 Events are important in smart contracts and blockchains. They help us and external observers know exactly what is happening and state changes being made, all without observing and tracking onchain storage changes explicitly. Here are the events defined by the great delphi:
 
 - The `AccountCreated` Event:
+
 ```rust
     /// Event to announce the creation of an account
     #[ink(event)]
@@ -111,6 +115,7 @@ Events are important in smart contracts and blockchains. They help us and extern
 ```
 
 - The `PropertyTypeRegistered` Event:
+
 ```rust
     //// Event to announce the registration of a property type
     #[ink(event)]
@@ -123,6 +128,7 @@ Events are important in smart contracts and blockchains. They help us and extern
 ```
 
 - The `PropertyClaimRegistered` Event:
+
 ```rust
     //// Event to announce the registration of a claim to a property
     #[ink(event)]
@@ -136,6 +142,7 @@ Events are important in smart contracts and blockchains. They help us and extern
 ```
 
 - The `PropertyTransferred` Event:
+
 ```rust
     /// Event to announce the successful transfer of a property
     #[ink(event)]
@@ -150,6 +157,7 @@ Events are important in smart contracts and blockchains. They help us and extern
 ```
 
 - The `PropertyDocumentSigned` Event:
+
 ```rust
     /// Event to announce the successful attestation of a property
     #[ink(event)]
@@ -188,13 +196,32 @@ Everything revolves around the storage of a smart contract. It is important that
 
 Functions are perhaps the core of a contract. They help interact with onchain storage and make state changes to them. Also, they serve as a mean to peek into contract storage and make inferences and decisions. We will not examing the functions utilized by the great delphi:
 
-- **`new`**:
-    ```rust 
-    pub fn new() -> Self { }
-    ```
-    - Make state changes: Yes, initializes contract storage.
-    - Arguments: None.
-    - Return Values: None.
-    - Description: The new function is the first function called before the others, at initialization. It initializes a contract storage and prepares it for reading and writing.
+- **Initialize contract storage**:
 
-- 
+```rust
+  pub fn new() -> Self { }
+```
+
+- Modifies storage: Yes, initializes contract storage.
+- Arguments: None.
+- Return Values: It return the contract storage.
+- Description: The new function is the first function called before the others, at initialization. It initializes a contract storage and prepares it for reading and writing.
+
+- **register new account**:
+
+```rust
+    pub fn register_account(
+          &mut self,
+          account_id: AccountIdVec,
+          name: Vec<u8>,
+          timestamp: TimeString,
+      ) -> Result<()>
+```
+
+- Modifies storage: Yes, initializes contract storage.
+- Arguments:
+    - `account_id`: Account ID vector containing the parsable u8 `AccountId` vector.
+    - `name`: The name (or pseudo-name) of the account owner.
+    - `timestamp`: The time of creation of the aaccount;
+- Return Values: None
+- Description: It created a new account on the delphi contract.
