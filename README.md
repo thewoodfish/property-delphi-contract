@@ -94,3 +94,73 @@ Type aliases helps us have neater and more readable code. Here are the error typ
 
 - The `TimeString` type should be a `u64` but we found it hard to decode on the client side, hence we opted for a byte array, which is easily decodable.
 - The `AccountIdVec` type is the samething as the standard Polkadot `AccountId`, its a collection on bytes, which makes it easier to work with.
+
+### Event Types
+
+Events are important in smart contracts and blockchains. They help us and external observers know exactly what is happening and state changes being made, all without observing and tracking onchain storage changes explicitly. Here are the events defined by the great delphi:
+
+- The `AccountCreated` Event:
+```rust
+    /// Event to announce the creation of an account
+    #[ink(event)]
+    pub struct AccountCreated {
+        #[ink(topic)]
+        account_id: AccountId,
+        name: Vec<u8>,
+    }
+```
+
+- The `PropertyTypeRegistered` Event:
+```rust
+    //// Event to announce the registration of a property type
+    #[ink(event)]
+    pub struct PropertyTypeRegistered {
+        #[ink(topic)]
+        account_id: AccountId,
+        property_type_id: PropertyTypeId,
+        ptype_ipfs_addr: PropertyRequirementAddr,
+    }
+```
+
+- The `PropertyClaimRegistered` Event:
+```rust
+    //// Event to announce the registration of a claim to a property
+    #[ink(event)]
+    pub struct PropertyClaimRegistered {
+        #[ink(topic)]
+        claimer: AccountId,
+        #[ink(topic)]
+        property_type_id: PropertyTypeId,
+        property_id: PropertyId,
+    }
+```
+
+- The `PropertyTransferred` Event:
+```rust
+    /// Event to announce the successful transfer of a property
+    #[ink(event)]
+    pub struct PropertyTransferred {
+        #[ink(topic)]
+        sender: AccountId,
+        #[ink(topic)]
+        recipient: AccountId,
+        #[ink(topic)]
+        property_id: PropertyId,
+    }
+```
+
+- The `PropertyDocumentSigned` Event:
+```rust
+    /// Event to announce the successful attestation of a property
+    #[ink(event)]
+    pub struct PropertyDocumentSigned {
+        #[ink(topic)]
+        attester: AccountId,
+        #[ink(topic)]
+        property_id: PropertyId,
+    }
+```
+
+### The Delphi Storage
+
+Everything revolves around the storage of a smart contract. It is important that they are wisely thought about nd efficiently built. Here, we used qa `Mapping` to store our various important and necessary data. This is the memory of the great delphi and everything she does either involves changing this data or reading and infering from it. Powerful eh? 😃 Let use examing the storage:
