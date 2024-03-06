@@ -195,6 +195,6 @@ Functions are perhaps the core of a contract. They help interact with onchain st
     - Make state changes: Yes, initializes contract storage.
     - Arguments: None.
     - Return Values: None.
-    - Desc: The new function is the first function called before the others, at initialization. It initializes a contract storage and prepares it for reading and writing.
+    - Description: The new function is the first function called before the others, at initialization. It initializes a contract storage and prepares it for reading and writing.
 
 - 
