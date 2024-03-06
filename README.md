@@ -188,7 +188,7 @@ Everything revolves around the storage of a smart contract. It is important that
 
 Functions are perhaps the core of a contract. They help interact with onchain storage and make state changes to them. Also, they serve as a mean to peek into contract storage and make inferences and decisions. We will not examing the functions utilized by the great delphi:
 
-- `new`:
+- The `new` function:
     - Signature: 
         ```rust 
         pub fn new() -> Self { }
