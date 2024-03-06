@@ -197,31 +197,37 @@ Everything revolves around the storage of a smart contract. It is important that
 Functions are perhaps the core of a contract. They help interact with onchain storage and make state changes to them. Also, they serve as a mean to peek into contract storage and make inferences and decisions. We will not examing the functions utilized by the great delphi:
 
 - **Initialize contract storage**:
+    ```rust
+    pub fn new() -> Self { }
+    ```
+    - Modifies storage: Yes, initializes contract storage.
+    - Arguments: None.
+    - Return Values: It return the contract storage.
+    - Description: The new function is the first function called before the others, at initialization. It initializes a contract storage and prepares it for reading and writing.
 
-```rust
-  pub fn new() -> Self { }
-```
+- **Register new account**:
+    ```rust
+        pub fn register_account(
+            &mut self,
+            account_id: AccountIdVec,
+            name: Vec<u8>,
+            timestamp: TimeString,
+        ) -> Result<()>
+    ```
 
-- Modifies storage: Yes, initializes contract storage.
-- Arguments: None.
-- Return Values: It return the contract storage.
-- Description: The new function is the first function called before the others, at initialization. It initializes a contract storage and prepares it for reading and writing.
+    - Modifies storage: Yes.
+    - Arguments:
+        - `account_id`: Account ID vector containing the parsable u8 `AccountId` vector.
+        - `name`: The name (or pseudo-name) of the account owner.
+        - `timestamp`: The time of creation of the aaccount;
+    - Return Values: None
+    - Description: It created a new account on the delphi contract.
 
-- **register new account**:
-
-```rust
-    pub fn register_account(
-          &mut self,
-          account_id: AccountIdVec,
-          name: Vec<u8>,
-          timestamp: TimeString,
-      ) -> Result<()>
-```
-
-- Modifies storage: Yes, initializes contract storage.
-- Arguments:
-    - `account_id`: Account ID vector containing the parsable u8 `AccountId` vector.
-    - `name`: The name (or pseudo-name) of the account owner.
-    - `timestamp`: The time of creation of the aaccount;
-- Return Values: None
-- Description: It created a new account on the delphi contract.
+- **Check for account existence**:
+    ```rust
+        pub fn account_exists(&self) -> (bool, Vec<u8>) {}
+    ```
+    - Modifies storage: No
+    - Arguments: None.
+    - Return Values: It return a boolean to indicate the existence of an account and the name on the account, if any.
+    - Description: It is a getter function that checks if an account exists in the contract storage.
