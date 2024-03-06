@@ -207,12 +207,12 @@ Functions are perhaps the core of a contract. They help interact with onchain st
 
 - **Register new account**:
     ```rust
-        pub fn register_account(
-            &mut self,
-            account_id: AccountIdVec,
-            name: Vec<u8>,
-            timestamp: TimeString,
-        ) -> Result<()>
+    pub fn register_account(
+        &mut self,
+        account_id: AccountIdVec,
+        name: Vec<u8>,
+        timestamp: TimeString,
+    ) -> Result<()>
     ```
 
     - Modifies storage: Yes.
@@ -225,7 +225,7 @@ Functions are perhaps the core of a contract. They help interact with onchain st
 
 - **Check for account existence**:
     ```rust
-        pub fn account_exists(&self) -> (bool, Vec<u8>) {}
+    pub fn account_exists(&self) -> (bool, Vec<u8>) {}
     ```
     - Modifies storage: No
     - Arguments: None.
