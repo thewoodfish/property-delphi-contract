@@ -182,4 +182,20 @@ Everything revolves around the storage of a smart contract. It is important that
 - The `registrations Mapping` maps an authority's (e.g Ministry of land) `AccountId` to the various property types they've registered (represented in a vector).
 - The `claims Mapping` maps a property type id to the various properties that fit and are and are subject to provide the information specified in the property type due to geography.
 - The `properties Mapping` maps a property identifier to the important details describing the property and its claims.
-- The `account_ids Mapping` is qa special and simnply unecessary mapping. It maps an account id of bytes to the standard `AccountId`. We added this to improvise and save time on our relentless effort to parse and decode an `AccountId` gotten from the contract. Instead, we simply return a parsable `AccountIdVec`in its stead.
+- The `account_ids Mapping` is a special and simply uneccesary mapping. It maps an account id of bytes to the standard `AccountId`. We added this to improvise and save time on our relentless effort to parse and decode an `AccountId` gotten from the contract. Instead, we simply return a parsable `AccountIdVec`in its stead.
+
+### The Contract Functions
+
+Functions are perhaps the core of a contract. They help interact with onchain storage and make state changes to them. Also, they serve as a mean to peek into contract storage and make inferences and decisions. We will not examing the functions utilized by the great delphi:
+
+- `new`:
+    - Signature: 
+        ```rust 
+        pub fn new() -> Self { }
+        ```
+    - Make state changes: Yes, initializes contract storage.
+    - Arguments: None.
+    - Return Values: None.
+    - Desc: The new function is the first function called before the others, at initialization. It initializes a contract storage and prepares it for reading and writing.
+
+- 
