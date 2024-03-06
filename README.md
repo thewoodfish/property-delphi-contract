@@ -171,7 +171,7 @@ Events are important in smart contracts and blockchains. They help us and extern
 
 ### The Delphi Storage
 
-Everything revolves around the storage of a smart contract. It is important that they are wisely thought about nd efficiently built. Here, we used qa `Mapping` to store our various important and necessary data. This is the memory of the great delphi and everything she does either involves changing this data or reading and infering from it. Powerful eh? 😃 Let us examing the storage:
+Everything revolves around the storage of a smart contract. It is important that they are wisely thought about nd efficiently built. Here, we used a `Mapping` to store our various important and necessary data. This is the memory of the great delphi and everything she does either involves changing this data or reading and infering from it. Powerful eh? 😃 Let us examing the storage:
 
 ```rust
     #[ink(storage)]
