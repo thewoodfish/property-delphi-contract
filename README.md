@@ -15,7 +15,7 @@ We will now examine the various constructs that make our solution work, ranging 
 
 - `AccountInfo`:
 
-  ```
+  ```rust
   pub struct AccountInfo {
       /// Name of user
       name: Vec<u8>,
@@ -27,7 +27,7 @@ We will now examine the various constructs that make our solution work, ranging 
   This represents the account information of an entity participating on the network. It contains the name (or pseudo-name) of the user and the time the account was created.
 
 - `Property`:
-    ```
+    ```rust
     pub struct Property {
         /// Id of claimer
         claimer: AccountId,
@@ -45,7 +45,7 @@ We will now examine the various constructs that make our solution work, ranging 
     This represents the neccesary information associated with a property. It describes a piece of property, contains the history of the property transfer and acquisition and the all-importqant attestation status of the property.
 
 - `PropertyType`:
-    ```
+    ```rust
         pub struct PropertyType {
         /// Id of property type
         id: PropertyTypeId,
