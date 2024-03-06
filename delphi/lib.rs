@@ -53,18 +53,6 @@ mod delphi {
         address: PropertyRequirementAddr,
     }
 
-    /// The struct representing a property claim, yet to be verified and attested
-    #[derive(scale::Decode, scale::Encode, Default, Clone)]
-    #[cfg_attr(
-        feature = "std",
-        derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
-    )]
-    pub struct PropertyClaim {
-        /// Id of property
-        id: PropertyId,
-        address: PropertyClaimAddr,
-    }
-
     /// Delphi's error type.
     #[derive(scale::Decode, scale::Encode, Clone)]
     #[cfg_attr(

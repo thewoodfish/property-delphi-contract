@@ -55,4 +55,16 @@ We will now examine the various constructs that make our solution work, ranging 
 
     This represents the type of a property. There are many separate information that are inportant to various districts and states that it is important that property documents remain flexible and the authority of the area specify the exact information that in needed on a property document, to prove its validity. Hence, a property tyep.
 
-- `
+
+### The Error Types
+
+Errors help us handle strange behaviour in our contract and we have defined just two of them:]
+```rust
+    pub enum Error {
+        /// Returned when a property owner tries to transfer to himself
+        CannotTransferToSelf,
+        /// Returned when an unauthorized account tries to sign a property document (attestation)
+        UnauthorizedAccount,
+    }
+```
+
