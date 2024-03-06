@@ -41,19 +41,6 @@ mod delphi {
         assertion: (AssertionTimestamp, AccountId),
     }
 
-    /// The struct containing info about the assertions of the land made by an authority
-    #[derive(scale::Decode, scale::Encode, Default)]
-    #[cfg_attr(
-        feature = "std",
-        derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
-    )]
-    pub struct IssueInfo {
-        /// Id of property
-        property: PropertyTypeId,
-        /// Time the assertion was created
-        timestamp: TimeString,
-    }
-
     /// The struct describing a property type
     #[derive(scale::Decode, scale::Encode, Default, Clone)]
     #[cfg_attr(
