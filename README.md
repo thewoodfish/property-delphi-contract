@@ -10,7 +10,7 @@ This repo contains the code for the delphi smart contract running on a typical s
 We will now examine the various constructs that make our solution work, ranging from contract storage,data types,error types to the all important contract function that define the behaviour of the network and make state changes on chain.
 
 ### The Data types
-    - `AccountInfo`:
+- `AccountInfo`:
     ```
     pub struct AccountInfo {
         /// Name of user
