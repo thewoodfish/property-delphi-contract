@@ -163,4 +163,23 @@ Events are important in smart contracts and blockchains. They help us and extern
 
 ### The Delphi Storage
 
-Everything revolves around the storage of a smart contract. It is important that they are wisely thought about nd efficiently built. Here, we used qa `Mapping` to store our various important and necessary data. This is the memory of the great delphi and everything she does either involves changing this data or reading and infering from it. Powerful eh? 😃 Let use examing the storage:
+Everything revolves around the storage of a smart contract. It is important that they are wisely thought about nd efficiently built. Here, we used qa `Mapping` to store our various important and necessary data. This is the memory of the great delphi and everything she does either involves changing this data or reading and infering from it. Powerful eh? 😃 Let us examing the storage:
+
+```rust
+    #[ink(storage)]
+    pub struct Delphi {
+        accounts: Mapping<AccountId, AccountInfo>,
+        registrations: Mapping<AccountId, Vec<PropertyType>>,
+        claims: Mapping<PropertyTypeId, Vec<PropertyId>>,
+        properties: Mapping<PropertyId, Property>,
+        /// This Mapping field is simply unnecessary. But due to the fact that we've found it difficult to
+        /// decode an AccountId with Javascript, we will be returning a Vec<u8> instead of an accountId
+        account_ids: Mapping<AccountId, AccountIdVec>,
+    }
+```
+
+- The `accounts Mapping` maps an `AccountId` to its information.
+- The `registrations Mapping` maps an authority's (e.g Ministry of land) `AccountId` to the various property types they've registered (represented in a vector).
+- The `claims Mapping` maps a property type id to the various properties that fit and are and are subject to provide the information specified in the property type due to geography.
+- The `properties Mapping` maps a property identifier to the important details describing the property and its claims.
+- The `account_ids Mapping` is qa special and simnply unecessary mapping. It maps an account id of bytes to the standard `AccountId`. We added this to improvise and save time on our relentless effort to parse and decode an `AccountId` gotten from the contract. Instead, we simply return a parsable `AccountIdVec`in its stead.
