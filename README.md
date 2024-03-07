@@ -212,7 +212,7 @@ Functions are perhaps the core of a contract. They help interact with onchain st
         account_id: AccountIdVec,
         name: Vec<u8>,
         timestamp: TimeString,
-    ) -> Result<()>
+    ) -> Result<()> { ... }
     ```
 
     - Modifies storage: Yes.
@@ -220,14 +220,102 @@ Functions are perhaps the core of a contract. They help interact with onchain st
         - `account_id`: Account ID vector containing the parsable u8 `AccountId` vector.
         - `name`: The name (or pseudo-name) of the account owner.
         - `timestamp`: The time of creation of the aaccount;
-    - Return Values: None
+    - Return Values: None.
     - Description: It created a new account on the delphi contract.
 
 - **Check for account existence**:
     ```rust
-    pub fn account_exists(&self) -> (bool, Vec<u8>) {}
+    pub fn account_exists(&self) -> (bool, Vec<u8>) { ... }
     ```
     - Modifies storage: No
     - Arguments: None.
     - Return Values: It return a boolean to indicate the existence of an account and the name on the account, if any.
     - Description: It is a getter function that checks if an account exists in the contract storage.
+
+
+- **Register property type**:
+    ```rust
+    pub fn register_ptype(
+        &mut self,
+        property_type_id: PropertyTypeId,
+        ptype_ipfs_addr: PropertyRequirementAddr,
+    ) -> Result<()> { ... }
+    ```  
+    - Modifies storage: Yes
+    - Arguments: 
+        - `property_type_id`: The ID describing a particular property type document schema peculiar to a particular region.
+        - `ptype_ipfs_addr`: The IPFS CID of the property document schema.
+    - Return Values: None.
+    - Description: It registers a particular document schema type peculiar to a particular location onchain.
+
+- **Get property claims**:
+    ```rust
+        pub fn property_claims(&self, property_type_id: PropertyTypeId) -> Vec<u8> { ... }
+    ```
+    - Modifies storage: No
+    - Arguments: 
+        - `property_type_id`: The ID describing a particular property type document schema peculiar to a particular region.
+    - Return Values: It returns a list of property (claims) ID.
+    - Description: It is a getter function that retrieves a list of property (claims) IDs registered according to a particular property type schema.
+
+- **Get property details**:
+    ```rust
+        pub fn property_detail(&self, property_id: PropertyId) -> Vec<u8> { ... }
+    ```
+    - Modifies storage: No
+    - Arguments: 
+        - `property_id`: The ID of a particular property.
+    - Return Values: It returns important attributes of the property object stored in contract storage.
+    - Description: It is a getter function that returns important attributes relating to a particular property.
+
+- **Transfer property**:
+    ```rust
+        pub fn transfer_property(
+            &mut self,
+            property_id: PropertyId,
+            recipient: AccountId,
+            senders_claim_ipfs_addr: PropertyClaimAddr,
+            senders_property_id: PropertyId,
+            recipients_claim_ipfs_addr: PropertyClaimAddr,
+            recipients_property_id: PropertyId,
+            time_of_transfer: PropertyTransferTimestamp,
+        ) -> Result<()> { ... }
+    ```
+    - Modifies storage: Yes
+    - Arguments: 
+        - `property_id`: The ID of a particular property.
+        - `recipient`: The accountId of the user recieving the property.
+        - `senders_claim_ipfs_addr`: The IPFS CID of the new property document the sender is entitiled to. This is as a result of the modification and discard of the old document.
+        - `senders_property_id`: The property ID of the new property document the sender holds.
+        - `recipients_claim_ipfs_addr`: The IPFS CID of the property document of the property being sent to the recipient.
+        - `recipients_property_id`: The property ID of the new property document the recipients holds.
+        - `time_of_transfer`: The time the transfer operation was dispatched.
+    - Return Values: None.
+    - Description: It transfers a piece of property from one account to the other, in part or in full.
+
+- **Sign document**:
+    ```rust
+        pub fn sign_document(
+            &mut self,
+            property_id: PropertyId,
+            property_type_id: PropertyTypeId,
+            assertion_timestamp: AssertionTimestamp,
+        ) -> Result<()> { ... }
+    ```
+    - Modifies storage: Yes
+    - Arguments: 
+        - `property_id`: The ID of a particular property.
+        - `property_type_id`: The ID describing a particular property type document schema peculiar to a particular region.
+        - `assertion_timestamp`: The time the transfer operation was dispatched.
+    - Return Values: None.
+    - Description: It confirms and solidifies an accounts claim to a piece of property. This can only be done by the right specific authority.
+
+- **Get attestation status**:
+    ```rust
+        pub fn attestation_status(&self, property_id: PropertyId) -> Vec<u8> { ... }
+    ```
+    - Modifies storage: No
+    - Arguments: 
+        - `property_id`: The ID of a particular property.
+    - Return Values: It returns the attestation status of a piece if property and the various previous owners, if any.
+    - Description: It is a getter function that returns the attestation status of a piece if property and the various previous owners, if any.
