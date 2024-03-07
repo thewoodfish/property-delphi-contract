@@ -5,7 +5,7 @@ With Property Delphi, nobody can take what is yours and leave you with nothing.
 
 # The Delphi Contract
 
-This repo contains the code for the delphi smart contract running on a typical substrate contracts node. The property oracle contract is very important because it records critical information about users of the network, the properties being secured or claimed, the claims and right to claim of the properties and so on, serving as a source of truth and decisions. We would examine the contract properly. The property delphi contract is completely built with <a target="_blank" href="https://use.ink">ink!</a> which is the best language for writing smart contracts.
+This repo contains the code for the delphi smart contract running on a typical substrate contracts node. The property delphi contract is very important because it records critical information about users of the network, the properties being secured or claimed, the claims and right to claim of the properties and so on, serving as a source of truth and decisions. We would examine the contract properly. The property delphi contract is completely built with <a target="_blank" href="https://use.ink">ink!</a> which is the best language for writing smart contracts.
 
 ## Examining the `delphi contract`
 
@@ -319,3 +319,23 @@ Functions are perhaps the core of a contract. They help interact with onchain st
         - `property_id`: The ID of a particular property.
     - Return Values: It returns the attestation status of a piece if property and the various previous owners, if any.
     - Description: It is a getter function that returns the attestation status of a piece if property and the various previous owners, if any.
+
+
+## Running a local node 
+- Install the necessary `Rust toolchains` and configure them. Please take a look at <a target="_blank" href="https://docs.substrate.io/install/">this page</a> to guide you appropriately.
+- After installation, download a substrate contracts node and start it running.
+- After cloning, open the terminal in the root folder and run the command: `cargo contract build --release`.
+- After your contract is built, instantiate it on the contracts node.
+- To interact with the Property Delphi front end, you have to set it up first. kindly read through the set up at: https://github.com/thewoodfish/property-delphi#how-to-run-or-test-property-delphi. It is very easy.
+
+## Going forward
+There a few improvements being considered for the property delphi contract going forward.
+- Using the timestamp (`u64`) instead of a timestring
+- Returning an `AccountId` instead of a vector of bytes.
+- etc.
+
+
+## Conclusion
+Property Delphi helps secure your properties and removes any worries or stress from the thought/incident of losing what belongs to you. So even though your physical documents are duplicated or falsified by scammers, once you've submited your document using property delphi and gotten the right authority to sign it, 😁 YOU MY FRIEND, ARE VERY SAFE, FOREVER! The great Delphi will alwaysspeak in your favour!
+
+Thank you for your time. God bless you! ❤️
