@@ -336,6 +336,6 @@ There a few improvements being considered for the property delphi contract going
 
 
 ## Conclusion
-Property Delphi helps secure your properties and removes any worries or stress from the thought/incident of losing what belongs to you. So even though your physical documents are duplicated or falsified by scammers, once you've submited your document using property delphi and gotten the right authority to sign it, 😁 YOU MY FRIEND, ARE VERY SAFE, FOREVER! The great Delphi will alwaysspeak in your favour!
+Property Delphi helps secure your properties and removes any worries or stress from the thought/incident of losing what belongs to you. So even though your physical documents are duplicated or falsified by scammers, once you've submited your document using property delphi and gotten the right authority to sign it, 😁 YOU MY FRIEND, ARE VERY SAFE, FOREVER! The great Delphi will always speak in your favour!
 
 Thank you for your time. God bless you! ❤️
