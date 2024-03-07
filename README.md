@@ -250,7 +250,7 @@ Functions are perhaps the core of a contract. They help interact with onchain st
 
 - **Get property claims**:
     ```rust
-        pub fn property_claims(&self, property_type_id: PropertyTypeId) -> Vec<u8> { ... }
+    pub fn property_claims(&self, property_type_id: PropertyTypeId) -> Vec<u8> { ... }
     ```
     - Modifies storage: No
     - Arguments: 
@@ -260,7 +260,7 @@ Functions are perhaps the core of a contract. They help interact with onchain st
 
 - **Get property details**:
     ```rust
-        pub fn property_detail(&self, property_id: PropertyId) -> Vec<u8> { ... }
+    pub fn property_detail(&self, property_id: PropertyId) -> Vec<u8> { ... }
     ```
     - Modifies storage: No
     - Arguments: 
@@ -270,16 +270,16 @@ Functions are perhaps the core of a contract. They help interact with onchain st
 
 - **Transfer property**:
     ```rust
-        pub fn transfer_property(
-            &mut self,
-            property_id: PropertyId,
-            recipient: AccountId,
-            senders_claim_ipfs_addr: PropertyClaimAddr,
-            senders_property_id: PropertyId,
-            recipients_claim_ipfs_addr: PropertyClaimAddr,
-            recipients_property_id: PropertyId,
-            time_of_transfer: PropertyTransferTimestamp,
-        ) -> Result<()> { ... }
+    pub fn transfer_property(
+        &mut self,
+        property_id: PropertyId,
+        recipient: AccountId,
+        senders_claim_ipfs_addr: PropertyClaimAddr,
+        senders_property_id: PropertyId,
+        recipients_claim_ipfs_addr: PropertyClaimAddr,
+        recipients_property_id: PropertyId,
+        time_of_transfer: PropertyTransferTimestamp,
+    ) -> Result<()> { ... }
     ```
     - Modifies storage: Yes
     - Arguments: 
@@ -295,12 +295,12 @@ Functions are perhaps the core of a contract. They help interact with onchain st
 
 - **Sign document**:
     ```rust
-        pub fn sign_document(
-            &mut self,
-            property_id: PropertyId,
-            property_type_id: PropertyTypeId,
-            assertion_timestamp: AssertionTimestamp,
-        ) -> Result<()> { ... }
+    pub fn sign_document(
+        &mut self,
+        property_id: PropertyId,
+        property_type_id: PropertyTypeId,
+        assertion_timestamp: AssertionTimestamp,
+    ) -> Result<()> { ... }
     ```
     - Modifies storage: Yes
     - Arguments: 
@@ -312,7 +312,7 @@ Functions are perhaps the core of a contract. They help interact with onchain st
 
 - **Get attestation status**:
     ```rust
-        pub fn attestation_status(&self, property_id: PropertyId) -> Vec<u8> { ... }
+    pub fn attestation_status(&self, property_id: PropertyId) -> Vec<u8> { ... }
     ```
     - Modifies storage: No
     - Arguments: 
