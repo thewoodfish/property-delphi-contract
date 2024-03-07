@@ -329,8 +329,8 @@ Functions are perhaps the core of a contract. They help interact with onchain st
 - To interact with the Property Delphi front end, you have to set it up first. kindly read through the set up at: https://github.com/thewoodfish/property-delphi#how-to-run-or-test-property-delphi. It is very easy.
 
 ## Going forward
-There a few improvements being considered for the property delphi contract going forward.
-- Using the timestamp (`u64`) instead of a timestring
+There a few improvements being considered for the property delphi contract going forward:
+- Using a timestamp (`u64`) instead of a timestring.
 - Returning an `AccountId` instead of a vector of bytes.
 - etc.
 
