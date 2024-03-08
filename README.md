@@ -332,6 +332,7 @@ Functions are perhaps the core of a contract. They help interact with onchain st
 There a few improvements being considered for the property delphi contract going forward:
 - Using a timestamp (`u64`) instead of a timestring.
 - Returning an `AccountId` instead of a vector of bytes.
+- Implementing a multisignature attestation mechanism.
 - etc.
 
 
