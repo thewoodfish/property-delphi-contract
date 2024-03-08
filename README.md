@@ -9,7 +9,7 @@ This repo contains the code for the delphi smart contract running on a typical s
 
 ## Examining the `delphi contract`
 
-We will now examine the various constructs that make our solution work, ranging from contract storage,data types,error types to the all important contract function that define the behaviour of the network and make state changes on chain.
+We will now examine the various constructs that make our solution work, ranging from contract storage, data types, error types to the all important contract function that define the behaviour of the network and make state changes on chain.
 
 ### The Data types
 
