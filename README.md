@@ -9,7 +9,7 @@ This repo contains the code for the delphi smart contract running on a typical s
 
 ## Examining the `delphi contract`
 
-We will now examine the various constructs that make our solution work, ranging from contract storage, data types, error types to the all important contract function that define the behaviour of the network and make state changes on chain.
+We will now examine the various constructs that make our solution work, ranging from contract storage, data types, error types to the all important contract functions that define the behaviour of the network and make state changes on chain.
 
 ### The Data types
 
@@ -55,7 +55,7 @@ We will now examine the various constructs that make our solution work, ranging 
   }
   ```
 
-  This represents the type of a property. There are many separate information that are inportant to various districts and states that it is important that property documents remain flexible and the authority of the area specify the exact information that in needed on a property document, to prove its validity. Hence, a property type.
+  This represents the type of a property. There are many separate information that are important to various districts and states that it is important that property documents remain flexible and the authority of the area specify the exact information that in needed on a property document, to prove its validity. Hence, a property type.
 
 ### The Error Types
 
