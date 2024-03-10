@@ -171,7 +171,7 @@ Events are important in smart contracts and blockchains. They help us and extern
 
 ### The Delphi Storage
 
-Everything revolves around the storage of a smart contract. It is important that they are wisely thought about nd efficiently built. Here, we used a `Mapping` to store our various important and necessary data. This is the memory of the great delphi and everything she does either involves changing this data or reading and infering from it. Powerful eh? 😃 Let us examing the storage:
+Everything revolves around the storage of a smart contract. It is important that they are wisely thought about and efficiently built. Here, we used a `Mapping` to store our various important and necessary data. This is the memory of the great delphi and everything she does either involves changing this data or reading and infering from it. Powerful eh? 😃 Let us examing the storage:
 
 ```rust
     #[ink(storage)]
@@ -188,13 +188,13 @@ Everything revolves around the storage of a smart contract. It is important that
 
 - The `accounts Mapping` maps an `AccountId` to its information.
 - The `registrations Mapping` maps an authority's (e.g Ministry of land) `AccountId` to the various property types they've registered (represented in a vector).
-- The `claims Mapping` maps a property type id to the various properties that fit and are and are subject to provide the information specified in the property type due to geography.
+- The `claims Mapping` maps a property type id to the various properties that fit and are subject to provide the information specified in the property type scheme based to geography.
 - The `properties Mapping` maps a property identifier to the important details describing the property and its claims.
 - The `account_ids Mapping` is a special and simply uneccesary mapping. It maps an account id of bytes to the standard `AccountId`. We added this to improvise and save time on our relentless effort to parse and decode an `AccountId` gotten from the contract. Instead, we simply return a parsable `AccountIdVec`in its stead.
 
 ### The Contract Functions
 
-Functions are perhaps the core of a contract. They help interact with onchain storage and make state changes to them. Also, they serve as a mean to peek into contract storage and make inferences and decisions. We will not examing the functions utilized by the great delphi:
+Functions are perhaps the core of a contract. They help interact with onchain storage and make state changes to them. Also, they serve as a means to peek into contract storage and make inferences and decisions. We will now examine the functions utilized by the great delphi:
 
 - **Initialize contract storage**:
     ```rust
