@@ -100,7 +100,7 @@ Type aliases helps us have neater and more readable code. Here are the error typ
 
 ### Event Types
 
-Events are important in smart contracts and blockchains. They help us and external observers know exactly what is happening and state changes being made, all without observing and tracking onchain storage changes explicitly. Here are the events defined by the great delphi:
+Events are important in smart contracts and blockchains. They help us and external observers know exactly what is happening and the state changes being made, without observing and tracking onchain storage changes explicitly. Here are the events defined by the great delphi:
 
 - The `AccountCreated` Event:
 
