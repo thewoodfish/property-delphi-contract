@@ -96,7 +96,7 @@ Type aliases helps us have neater and more readable code. Here are the error typ
 ```
 
 - The `TimeString` type should be a `u64` but we found it hard to decode on the client side, hence we opted for a byte array, which is easily decodable.
-- The `AccountIdVec` type is the samething as the standard Polkadot `AccountId`, its a collection on bytes, which makes it easier to work with.
+- The `AccountIdVec` type is the samething as the standard Polkadot `AccountId`, but its a collection of bytes, which makes it easier to work with.
 
 ### Event Types
 
